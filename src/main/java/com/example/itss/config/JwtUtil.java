@@ -3,70 +3,52 @@ package com.example.itss.config;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
+
     @Value("${secretKey}")
     private String secretKey;
 
-    /**
-     * Tạo JWT token cho username
-     * @param username Tên người dùng
-     * @return JWT token
-     */
-    public String generateToken(String username) {
-        Instant now = Instant.now();
-        Instant expirationTime = now.plus(10, ChronoUnit.HOURS);
+    private static final long EXPIRATION_TIME = 86400000L;
 
+    // Sử dụng Keys để tạo khoá bí mật có độ dài đủ cho HS384 hoặc HS512
+    private static SecretKey key;
+
+    @PostConstruct
+    public void init() {
+        if (secretKey != null && !secretKey.isEmpty()) {
+            key = Keys.hmacShaKeyFor(secretKey.getBytes());
+        } else {
+            // Tạo một khoá bí mật ngẫu nhiên nếu không có giá trị từ application.properties
+            key = Keys.secretKeyFor(SignatureAlgorithm.HS384); // Hoặc HS512 nếu bạn muốn
+        }
+    }
+
+    // Phương thức non-static để tạo token
+    public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
-                .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(expirationTime))
-                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 10 * 60 * 60 * 1000)) // 10 giờ
+                .signWith(key) // Sử dụng khoá đã được tạo từ Keys
                 .compact();
     }
 
-    /**
-     * Trích xuất tên người dùng từ JWT token
-     * @param token JWT token
-     * @return Tên người dùng
-     */
     public String extractUsername(String token) {
         return getClaims(token).getSubject();
     }
 
-    /**
-     * Kiểm tra tính hợp lệ của token
-     * @param token JWT token
-     * @return true nếu token hợp lệ, false nếu không hợp lệ
-     */
-    public boolean isTokenValid(String token) {
-        return !isTokenExpired(token);
-    }
-
-    /**
-     * Kiểm tra token có hết hạn hay không
-     * @param token JWT token
-     * @return true nếu token đã hết hạn, false nếu chưa hết hạn
-     */
-    private boolean isTokenExpired(String token) {
-        return getClaims(token).getExpiration().before(new Date());
-    }
-
-    /**
-     * Lấy các claim từ token
-     * @param token JWT token
-     * @return Claims chứa các thông tin trong token
-     */
     private Claims getClaims(String token) {
         return Jwts.parser()
-                .setSigningKey(secretKey)
+                .setSigningKey(key)
                 .parseClaimsJws(token)
                 .getBody();
     }

@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Timestamp;
+
 @Getter
 @Setter
 @Entity
@@ -37,4 +39,68 @@ public class Exercise {
 
     @OneToOne(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true)
     private HintExercise hintExercise;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Timestamp getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Timestamp startTime) {
+        this.startTime = startTime;
+    }
+
+    public Timestamp getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Timestamp endTime) {
+        this.endTime = endTime;
+    }
+
+    public ExerciseType getExerciseType() {
+        return exerciseType;
+    }
+
+    public void setExerciseType(ExerciseType exerciseType) {
+        this.exerciseType = exerciseType;
+    }
+
+    public WorkExercise getWorkExercise() {
+        return workExercise;
+    }
+
+    public void setWorkExercise(WorkExercise workExercise) {
+        this.workExercise = workExercise;
+    }
+
+    public YourExercise getYourExercise() {
+        return yourExercise;
+    }
+
+    public void setYourExercise(YourExercise yourExercise) {
+        this.yourExercise = yourExercise;
+    }
+
+    public HintExercise getHintExercise() {
+        return hintExercise;
+    }
+
+    public void setHintExercise(HintExercise hintExercise) {
+        this.hintExercise = hintExercise;
+    }
 }
