@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -38,10 +38,10 @@ public class AuthController {
             String password = userData.get("password");
 
             if (userRepository.findByEmail(email).isPresent()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Email already exists"));
+                return ResponseEntity.badRequest().body(Map.of("message", "メールアドレスはすでに存在します"));
             }
             if (userRepository.findByUsername(username).isPresent()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Username already exists"));
+                return ResponseEntity.badRequest().body(Map.of("message", "ユーザー名はすでに存在します"));
             }
 
             User user = new User();
@@ -50,7 +50,7 @@ public class AuthController {
             user.setPassword(passwordEncoder.encode(password));
 
             userRepository.save(user);
-            return ResponseEntity.ok(Map.of("message", "User registered successfully"));
+            return ResponseEntity.ok(Map.of("message", "ユーザーの登録が完了しました"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -65,7 +65,7 @@ public class AuthController {
             Optional<User> userOpt = userRepository.findByUsername(username);
             if (userOpt.isPresent() && passwordEncoder.matches(password, userOpt.get().getPassword())) {
                 User user = userOpt.get();
-                String token = jwtUtil.generateToken(user.getUsername(), user.getId());
+                String token = jwtUtil.generateToken(user.getId());
 
                 Map<String, Object> response = new HashMap<>();
                 response.put("token", token);
@@ -73,7 +73,7 @@ public class AuthController {
                 response.put("username", user.getUsername());
                 return ResponseEntity.ok(response);
             }
-            return ResponseEntity.badRequest().body(Map.of("message", "Invalid username or password"));
+            return ResponseEntity.badRequest().body(Map.of("message", "ユーザー名またはパスワードが無効です"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
@@ -88,11 +88,11 @@ public class AuthController {
                 if (passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
                     user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
                     userRepository.save(user);
-                    return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+                    return ResponseEntity.ok(Map.of("message", "パスワードが正常に変更されました"));
                 }
-                return ResponseEntity.badRequest().body(Map.of("message", "Old password is incorrect"));
+                return ResponseEntity.badRequest().body(Map.of("message", "古いパスワードが間違っています"));
             }
-            return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
+            return ResponseEntity.badRequest().body(Map.of("message", "ユーザーが見つかりません"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }

@@ -21,7 +21,6 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        // Ensure key is at least 256 bits for HS256
         if (secretKey == null || secretKey.length() < 32) {
             key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
         } else {
@@ -29,19 +28,14 @@ public class JwtUtil {
         }
     }
 
-    public String extractUsername(String token) {
-        return getClaims(token).getSubject();
-    }
-
     public Long extractUserId(String token) {
         Claims claims = getClaims(token);
-        return claims.get("userId", Long.class);
+        return Long.parseLong(claims.getSubject());
     }
 
-    public String generateToken(String username, Long userId) {
+    public String generateToken(Long userId) {
         return Jwts.builder()
-                .setSubject(username)
-                .claim("userId", userId)
+                .setSubject(userId.toString())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key)

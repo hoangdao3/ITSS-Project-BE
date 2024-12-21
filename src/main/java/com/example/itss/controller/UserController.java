@@ -42,37 +42,31 @@ public class UserController {
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@RequestHeader("Authorization") String token, @RequestBody UserUpdateDTO userDetails) {
         try {
-            String jwtToken = token.substring(7); // Bỏ "Bearer " từ token
+            String jwtToken = token.substring(7);
             Long userId = jwtUtil.extractUserId(jwtToken);
 
-            // Tìm user hiện tại
+            // Find current user
             User existingUser = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // Kiểm tra xem username mới có bị trùng không (nếu có thay đổi)
+            // Check if new username already exists (if changed)
             if (!existingUser.getUsername().equals(userDetails.getUsername()) &&
                     userRepository.findByUsername(userDetails.getUsername()).isPresent()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Username already exists"));
             }
 
-            // Kiểm tra email mới có bị trùng không (nếu có thay đổi)
-            if (!existingUser.getEmail().equals(userDetails.getEmail()) &&
-                    userRepository.findByEmail(userDetails.getEmail()).isPresent()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Email already exists"));
-            }
-
+            // Update only allowed fields
             existingUser.setFullname(userDetails.getFullname());
-            existingUser.setEmail(userDetails.getEmail());
             existingUser.setUsername(userDetails.getUsername());
             existingUser.setPhone(userDetails.getPhone());
+            // Email is not updated
 
             User updatedUser = userRepository.save(existingUser);
 
-            // Tạo DTO để trả về (không bao gồm password)
+            // Create DTO for response
             UserResponseDTO responseDTO = new UserResponseDTO(
-//                    updatedUser.getId(),
                     updatedUser.getUsername(),
-                    updatedUser.getEmail(),
+                    updatedUser.getEmail(),    // Original email is kept
                     updatedUser.getFullname(),
                     updatedUser.getPhone()
             );
@@ -82,6 +76,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
+
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         userRepository.deleteById(id);

@@ -13,14 +13,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserUpdateDTO {
-
     @NotBlank(message = "Fullname is required")
     @Size(max = 50, message = "Fullname must be less than 50 characters")
     private String fullname;
-
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    private String email;
 
     @NotBlank(message = "Username is required")
     @Size(min = 4, max = 20, message = "Username must be between 4 and 20 characters")
@@ -36,14 +31,6 @@ public class UserUpdateDTO {
 
     public void setFullname(@NotBlank(message = "Fullname is required") @Size(max = 50, message = "Fullname must be less than 50 characters") String fullname) {
         this.fullname = fullname;
-    }
-
-    public @NotBlank(message = "Email is required") @Email(message = "Email should be valid") String getEmail() {
-        return email;
-    }
-
-    public void setEmail(@NotBlank(message = "Email is required") @Email(message = "Email should be valid") String email) {
-        this.email = email;
     }
 
     public @NotBlank(message = "Username is required") @Size(min = 4, max = 20, message = "Username must be between 4 and 20 characters") String getUsername() {

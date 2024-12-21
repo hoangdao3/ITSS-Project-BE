@@ -44,7 +44,7 @@ public class AuthService {
         }
 
         User user = userOpt.get(); // Get the User object
-        return jwtUtil.generateToken(user.getUsername(), user.getId()); // Pass both username and userId
+        return jwtUtil.generateToken(user.getId()); // Pass both username and userId
     }
 
     public UserResponse getUserInfo(String username) {
