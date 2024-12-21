@@ -32,8 +32,8 @@ public class User {
     @Column(nullable = false, length = 255)
     private String password;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Exercise> exercises;
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Exercise> exercises;
 
     public Long getId() {
         return id;
@@ -83,12 +83,12 @@ public class User {
         this.password = password;
     }
 
-    public List<Exercise> getExercises() {
-        return exercises;
-    }
-
-    public void setExercises(List<Exercise> exercises) {
-        this.exercises = exercises;
-    }
+//    public List<Exercise> getExercises() {
+//        return exercises;
+//    }
+//
+//    public void setExercises(List<Exercise> exercises) {
+//        this.exercises = exercises;
+//    }
 }
 

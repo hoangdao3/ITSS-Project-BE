@@ -13,42 +13,45 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-
     @Value("${secretKey}")
     private String secretKey;
 
-    private static final long EXPIRATION_TIME = 86400000L;
-
-    // Sử dụng Keys để tạo khoá bí mật có độ dài đủ cho HS384 hoặc HS512
-    private static SecretKey key;
+    private static final long EXPIRATION_TIME = 86400000L; // 24 hours
+    private SecretKey key;
 
     @PostConstruct
     public void init() {
-        if (secretKey != null && !secretKey.isEmpty()) {
-            key = Keys.hmacShaKeyFor(secretKey.getBytes());
+        // Ensure key is at least 256 bits for HS256
+        if (secretKey == null || secretKey.length() < 32) {
+            key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
         } else {
-            // Tạo một khoá bí mật ngẫu nhiên nếu không có giá trị từ application.properties
-            key = Keys.secretKeyFor(SignatureAlgorithm.HS384); // Hoặc HS512 nếu bạn muốn
+            key = Keys.hmacShaKeyFor(secretKey.getBytes());
         }
-    }
-
-    // Phương thức non-static để tạo token
-    public String generateToken(String username) {
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 10 * 60 * 60 * 1000)) // 10 giờ
-                .signWith(key) // Sử dụng khoá đã được tạo từ Keys
-                .compact();
     }
 
     public String extractUsername(String token) {
         return getClaims(token).getSubject();
     }
 
-    private Claims getClaims(String token) {
-        return Jwts.parser()
+    public Long extractUserId(String token) {
+        Claims claims = getClaims(token);
+        return claims.get("userId", Long.class);
+    }
+
+    public String generateToken(String username, Long userId) {
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("userId", userId)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(key)
+                .compact();
+    }
+
+    public Claims getClaims(String token) {
+        return Jwts.parserBuilder()
                 .setSigningKey(key)
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
     }

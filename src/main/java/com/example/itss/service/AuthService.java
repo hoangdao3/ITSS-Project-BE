@@ -33,7 +33,7 @@ public class AuthService {
         user.setPhone(request.getPhone());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
-        return "User registered successfully";
+        return "User  registered successfully";
     }
 
     public String login(AuthRequest request) {
@@ -43,17 +43,15 @@ public class AuthService {
             throw new BadCredentialsException("Invalid username or password");
         }
 
-        return jwtUtil.generateToken(request.getUsername());
+        User user = userOpt.get(); // Get the User object
+        return jwtUtil.generateToken(user.getUsername(), user.getId()); // Pass both username and userId
     }
-
 
     public UserResponse getUserInfo(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User  not found"));
         return new UserResponse(user.getFullname(), user.getEmail(), user.getUsername(), user.getPhone());
     }
-
-
 
     public String changePassword(String username, String newPassword) {
         User user = userRepository.findByUsername(username)

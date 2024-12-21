@@ -1,45 +1,36 @@
 package com.example.itss.model;
 
+import com.example.itss.model.ExerciseType;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.sql.Timestamp;
 
-@Getter
-@Setter
 @Entity
-@Table(name = "exercises")
+@Table(name = "exercises2")
 public class Exercise {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id")
+    private Long userId; // Thay vì sử dụng đối tượng User, bạn có thể sử dụng userId
 
-    @Column(name = "start_time", nullable = false)
-    private java.sql.Timestamp startTime;
+    @Column(name = "start_time")
+    private Timestamp startTime;
 
-    @Column(name = "end_time", nullable = false)
-    private java.sql.Timestamp endTime;
+    @Column(name = "end_time")
+    private Timestamp endTime;
 
-    @Column(name = "exercise_type", nullable = false)
-    @Enumerated(EnumType.STRING) // Dùng enum để đại diện cho 3 loại exercise
-    private ExerciseType exerciseType;
+    @Column(name = "exercise_type")
+    private ExerciseType exercise_type; // Sử dụng enum để đại diện cho các loại exercise
 
-    @OneToOne(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true)
-    private WorkExercise workExercise;
+    @Column(name = "description")
+    private String description;
 
-    @OneToOne(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true)
-    private YourExercise yourExercise;
+    @Column(name = "note")
+    private String note;
 
-    @OneToOne(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true)
-    private HintExercise hintExercise;
-
+    // Getter và Setter
     public Long getId() {
         return id;
     }
@@ -48,12 +39,12 @@ public class Exercise {
         this.id = id;
     }
 
-    public User getUser() {
-        return user;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public Timestamp getStartTime() {
@@ -72,35 +63,27 @@ public class Exercise {
         this.endTime = endTime;
     }
 
-    public ExerciseType getExerciseType() {
-        return exerciseType;
+    public ExerciseType getType() {
+        return exercise_type;
     }
 
-    public void setExerciseType(ExerciseType exerciseType) {
-        this.exerciseType = exerciseType;
+    public void setType(ExerciseType type) {
+        this.exercise_type = type;
     }
 
-    public WorkExercise getWorkExercise() {
-        return workExercise;
+    public String getDescription() {
+        return description;
     }
 
-    public void setWorkExercise(WorkExercise workExercise) {
-        this.workExercise = workExercise;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public YourExercise getYourExercise() {
-        return yourExercise;
+    public String getNote() {
+        return note;
     }
 
-    public void setYourExercise(YourExercise yourExercise) {
-        this.yourExercise = yourExercise;
-    }
-
-    public HintExercise getHintExercise() {
-        return hintExercise;
-    }
-
-    public void setHintExercise(HintExercise hintExercise) {
-        this.hintExercise = hintExercise;
+    public void setNote(String note) {
+        this.note = note;
     }
 }

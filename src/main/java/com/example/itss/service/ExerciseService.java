@@ -30,19 +30,27 @@ public class ExerciseService {
         return exerciseRepository.findById(id);
     }
 
-    public Exercise updateExercise(Long id, Exercise updatedExercise) {
-        return exerciseRepository.findById(id).map(exercise -> {
-            exercise.setStartTime(updatedExercise.getStartTime());
-            exercise.setEndTime(updatedExercise.getEndTime());
-            exercise.setExerciseType(updatedExercise.getExerciseType());
-            return exerciseRepository.save(exercise);
-        }).orElseThrow(() -> new RuntimeException("Exercise not found with id " + id));
+    public Optional<Exercise> getExerciseByIdAndUserId(Long id, Long userId) {
+        return exerciseRepository.findByIdAndUserId(id, userId);
     }
+
+//    public Exercise updateExercise(Long id, Exercise updatedExercise) {
+//        return exerciseRepository.findById(id).map(exercise -> {
+//            exercise.setStartTime(updatedExercise.getStartTime());
+//            exercise.setEndTime(updatedExercise.getEndTime());
+//            exercise.setExerciseType(updatedExercise.getExerciseType());
+//            return exerciseRepository.save(exercise);
+//        }).orElseThrow(() -> new RuntimeException("Exercise not found with id " + id));
+//    }
 
     public void deleteExercise(Long id) {
         if (!exerciseRepository.existsById(id)) {
             throw new RuntimeException("Exercise not found with id " + id);
         }
         exerciseRepository.deleteById(id);
+    }
+
+    public void deleteExerciseByIdAndUserId(Long id, Long userId) {
+        exerciseRepository.deleteByIdAndUserId(id, userId);
     }
 }

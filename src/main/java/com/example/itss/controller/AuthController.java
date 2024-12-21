@@ -6,13 +6,14 @@ import com.example.itss.model.User;
 import com.example.itss.repository.UserRepository;
 import com.example.itss.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-@CrossOrigin(origins = "http://localhost:3000")
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -25,80 +26,75 @@ public class AuthController {
 
     @Autowired
     private EmailService emailService;
+
     @Autowired
     private JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public Map<String, String> register(@RequestBody Map<String, String> userData) {
-        // Lấy thông tin từ userData
-        String email = userData.get("email");
-        String username = userData.get("username");
-        String password = userData.get("password");
+    public ResponseEntity<?> register(@RequestBody Map<String, String> userData) {
+        try {
+            String email = userData.get("email");
+            String username = userData.get("username");
+            String password = userData.get("password");
 
-        // Kiểm tra xem email và username đã tồn tại chưa
-        if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("Email đã tồn tại");
+            if (userRepository.findByEmail(email).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Email already exists"));
+            }
+            if (userRepository.findByUsername(username).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Username already exists"));
+            }
+
+            User user = new User();
+            user.setEmail(email);
+            user.setUsername(username);
+            user.setPassword(passwordEncoder.encode(password));
+
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of("message", "User registered successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
-        if (userRepository.findByUsername(username).isPresent()) {
-            throw new RuntimeException("Username đã tồn tại");
-        }
-
-        // Tạo một đối tượng User mới
-        User user = new User();
-        user.setEmail(email);
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password)); // Mã hóa mật khẩu
-
-        // Lưu người dùng vào cơ sở dữ liệu
-        userRepository.save(user);
-
-        return Map.of("message", "User  registered successfully");
     }
 
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody User user) {
-        Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
-        if (existingUser.isPresent() && passwordEncoder.matches(user.getPassword(), existingUser.get().getPassword())) {
-            // Tạo JWT Token khi đăng nhập thành công
-            String token = jwtUtil.generateToken(existingUser.get().getUsername());  // Gọi phương thức non-static
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Login successful");
-            response.put("token", token);  // Gửi token cùng với phản hồi
-            return response;
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
+        try {
+            String username = loginRequest.get("username");
+            String password = loginRequest.get("password");
+
+            Optional<User> userOpt = userRepository.findByUsername(username);
+            if (userOpt.isPresent() && passwordEncoder.matches(password, userOpt.get().getPassword())) {
+                User user = userOpt.get();
+                String token = jwtUtil.generateToken(user.getUsername(), user.getId());
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("token", token);
+                response.put("userId", user.getId());
+                response.put("username", user.getUsername());
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid username or password"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
-        throw new RuntimeException("Invalid username or password");
-    }
-
-
-    @PostMapping("/logout")
-    public Map<String, String> logout() {
-        return Map.of("message", "Logout successful");
-    }
-
-    @PostMapping("/forgot-password")
-    public Map<String, String> forgotPassword(@RequestParam String email) {
-        Optional<User> user = userRepository.findByEmail(email);
-        if (user.isPresent()) {
-            String resetLink = "http://example.com/reset-password?token=some_token";
-            emailService.sendEmail(email, "Password Reset", "Here is your password reset link: " + resetLink);
-            return Map.of("message", "Password reset email sent successfully");
-        }
-        return Map.of("message", "Email not found");
     }
 
     @PostMapping("/change-password")
-    public Map<String, String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
-        Optional<User> user = userRepository.findByUsername(changePasswordDTO.getUsername());
-        if (user.isPresent()) {
-            if (passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.get().getPassword())) {
-                user.get().setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
-                userRepository.save(user.get());
-                return Map.of("message", "Password changed successfully");
-            } else {
-                return Map.of("message", "Old password is incorrect");
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
+        try {
+            Optional<User> userOpt = userRepository.findByUsername(changePasswordDTO.getUsername());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                if (passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
+                    user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+                    userRepository.save(user);
+                    return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+                }
+                return ResponseEntity.badRequest().body(Map.of("message", "Old password is incorrect"));
             }
+            return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
-        return Map.of("message", "User not found");
     }
-
 }
